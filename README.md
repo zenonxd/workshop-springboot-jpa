@@ -4,6 +4,8 @@
 ## Sumário
 - [Domain Model](##Domain-Model)
 - [Domain Instance](##Domain-Instance)
+- [User entity and resource](User-entity-and-resource)
+- [H2 database, test profile, JPA]()
 
 
 ## Conteúdo
@@ -22,7 +24,9 @@
 ![img_1.png](img_1.png)
 
 
-## Spring Annotations
+## User entity and resource
+
+### Spring Annotations
 
 - @RestController - Indica que o dado que será retornada por cada método, está sendo escrita diretamente no body ao invés de renderizar um template.
   O RestController é inserido em classes que possuem ResourceLayer. Se temos uma classe <b>Usuario</b> por exemplo, teremos uma UserResource, conforme abaixo.
@@ -45,32 +49,79 @@ public class UserResource {
 - @GetMapping - Feito para requisições GET, conforme utilizado no método acima.
 
 
+## H2 database, test profile, JPA
 
+### Checklist:
+- JPA & H2 dependencies
+- application.properties
+- application-test.properties
+- Entity: JPA mapping 
 
-```java
-package aplicacao;
-
-import dominio.Pessoa;
-
-public class Programa {
-
-	public static void main(String[] args) {
-		Pessoa p1 = new Pessoa(1, "Carlos da Silva", "carlos@gmail.com");
-		Pessoa p2 = new Pessoa(2, "Joaquim Torres", "joaquim@gmail.com");
-		Pessoa p3 = new Pessoa(3, "Ana Maria", "ana@gmail.com");
-
-		System.out.println(p1);
-		System.out.println(p2);
-		System.out.println(p3);
-	}
-}
-```
-
-
+<details>
+  <summary style="font-weight: bold; font-size: 18px">Dependencies:</summary>
 ```xml
-<properties>
-	<maven.compiler.source>11</maven.compiler.source>
-	<maven.compiler.target>11</maven.compiler.target>
-</properties>
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+  </dependency>
+
+  <dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <scope>runtime</scope>
+  </dependency>
+```
+</details>
+
+
+<details>
+  <summary style="font-weight: bold; font-size: 18px" >application.properties:</summary>
+
+```
+spring.profiles.active=test
+spring.jpa.open-in-view=true
 ```
 
+</details>
+
+
+<details> 
+  <summary style="font-weight: bold; font-size: 18px" >application-test.properties:</summary>
+
+```
+# DATASOURCE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.username=sa
+spring.datasource.password=
+# H2 CLIENT
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+# JPA, SQL
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.defer-datasource-initialization=true
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+```
+</details> 
+
+<details>
+  <summary style="font-weight: bold; font-size: 18px">Entity: JPA Mapping:</summary>
+
+  Colocar na classe User algumas anotações do JPA. Instruindo ao JPA como converter os objetos para o modelo relacional.
+  1. Colocar @Entity em cima da classe.
+  2. Colocar uma @Table(name = "tb_user"). Isso porque a palavra User é uma palavra reservada do banco de dados H2 então precisamos renomear para essa tabela não ter nenhum tipo de conflito.
+  3. Settar primaryKey, nesse caso ID.
+     - Sabemos que ID é uma coluna autoincrementada, então colocamos @GeneratedValue(strategy = GenerationType.IDENTITY).
+    
+```java
+@Entity
+@Table(name = "tb_user")
+public class User implements Serializable {
+    private static final long serialVersionUID = 1L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+```
+
+</details>
