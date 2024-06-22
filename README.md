@@ -2,13 +2,207 @@
 
 
 ## Sumário
-- [Domain Model](##Domain-Model)
-- [Domain Instance](##Domain-Instance)
-- [User entity and resource](##User-entity-and-resource)
-- [H2 database, test profile, JPA](##H2-database-test-profile-JPA)
-- [JPA repository, dependency injection, database seeding](##JPA-repository,-dependency-injection,-database-seeding)
-- [## Service layer, component registration](##Service-layer,-component-registration)
+- [Domain Model](#Domain-Model)
+- [Domain Instance](#Domain-Instance)
+- [User entity and resource](#User-entity-and-resource)
+- [H2 database, test profile, JPA](#H2-database-test-profile-JPA)
+- [JPA repository, dependency injection, database seeding](#JPA-repository-dependency-injection-database-seeding)
+- [Service layer, component registration](#Service-layer-component-registration)
+- [Order, Instant, ISO 8601](#order-instant-iso-8601)
 
+## Service Layer
+![img_2.png](img_2.png)
+
+A camada de **Resources** é um **controlador**. Deve somente **intermediar** as operações de aplicação e regras de negócio.
+
+
+Portanto, o Resources (controlador/UserResource) irá **depender do Service (service/UserService).**
+
+E o Service depende do Repository/UserRepository - <b>a interface</b>.
+
+
+Ou seja: @RestControllers (UserResource) tem dependencia de @Services (UserService) e por sua vez, Services dependem de @Repository.
+
+### MAIS
+
+Sabemos que o UserService importado para dentro do UserResource com @AutoWired foi injetada automaticamente pelo Spring.
+
+Mas para a variável service (advinda do UserService) funcionar dentro da classe (UserResource), a classe UserService deve ser registrada como um componente do Spring.
+
+
+```java
+@Component
+public class UserService {}
+
+    E assim, essa classe poderá ser injetada automaticamente com o @AutoWired na outra classe:
+
+public class UserResource {
+    @Autowired
+    private UserService service;
+```
+
+
+
+
+<details>
+    <summary style="font-weight: bold; font-size: 25px">Anotações Spring @</summary>
+
+## Anotações Spring @
+
+- ### @Entity
+Informa que uma classe também é uma entidade. Estabelecerá a ligação entre a entidade nomeada e uma tabela de mesmo nome no banco de dados.
+
+Uma entidade é uma tabela no banco de dados. 
+
+Além disso, cada tabela possui um nome. Então precisamos usar a anotação @Table.
+
+
+- ### @Table
+
+Aqui podemos especificar detalhes da tabela que serão utilizados para persistir as nossas entidades no banco de dados.
+
+Se não usarmos essa anotação, não teremos erro. A menos que já exista uma tabela com esse nome no banco de dados.
+
+
+- ### @GeneratedValue 
+É uma enum. Usamos para informar que geração do valor do identificador único será gerenciada pelo proprio provedor de persistência.
+
+  Usamos logo após @Id. Se não passarmos essa anotação, significa que a responsabilidade de gerar e gerir as chaves primárias, será da aplicação.
+  - **GenerationType.AUTO** - Padrão. Deixa o provedor de persistência a escolha da estratégia mais adequada.
+  - **GenerationType.IDENTITY** - Será um autoincrement. Os valores serão gerados para cada registro inserido no banco.
+  - **GenerationType.SEQUENCE** - Será ingerido a partir de uma sequência. Caso não seja especificado um nome para a sequence, será utilizada uma sequence padrão, a qual será global, para todas as entidades.
+  - **GenerationType.TABLE** - É necessário criar uma tabela para gerenciar as chaves primárias. Essa opção é pouco recomendada.
+  
+
+- ### @Configuration  
+
+Para o Spring identificar que é uma classe de configuração.
+
+  - Essa classe de configuração ela não é nem controller, service ou repository. Ela é uma classe auxiliar que vai fazer umas configurações na aplicação. 
+  - Criamos um package chamado config e criamos uma entidade chamada TestConfig. 
+  - **Para o Spring identificar que é uma classe de configuração, passaremos uma anottation @Configuration.**
+   
+Além disso, para caracterizarmos essa classe como perfil de teste, passaremos uma anottation @Profile("test").
+
+**Essa classe TestConfig vai servir para database seeding. Ou seja, popular o banco de dados. Sabemos que para acessar/salvar coisas no banco de dados utilizamos o Repository.**
+```java
+@Configuration
+@Profile("test")
+public class TestConfig {}
+```
+
+- ### @AutoWired 
+
+Ela associa uma instância numa classe. No nosso exemplo, nós importamos para a classe **TesteConfig** o **UserRepository** e usamos essa anotação. 
+```java
+@Configuration
+@Profile("test")
+public class TestConfig implements CommandLineRunner {
+    @Autowired
+    private UserRepository userRepository;
+```
+
+- ### @Component
+É um esteriótipo, suas especializações são:
+- @Repository
+  - Pacote repositories.
+- @Service
+  - pacote services.
+- Controller/RestController
+  - pacote resources
+
+
+Quando uma classe é anotada com @Component significa que a mesma usará o padrão de injeção de depêndencia, e será elegível para auto-configuração e auto-detecção de objeto instanciado anotados à partir de escaneamento de classpath que o IoC Container do Spring faz.
+
+A anotação **@Component** deve ser usada em nível de classe, dessa forma:
+```java
+@Component
+public class Foo {
+//implementação da  classe
+}
+```
+Para referenciar a mesma em outro contexto (obter a instância), pode se usar a anotação @Autowired, dessa forma:
+```java
+@Component
+public class Bar {
+   @Autowired
+   private Foo foo;
+}
+```
+
+
+- ### @Controller 
+
+Para que os dados sejam serializados diretamente na response. Usamos @ResponseBody nos métodos. Para não ficarmos reescrevendo toda hora, utilizamos @RestController.
+
+É util para aplicações mais tradicionais, porque você pode rendarizar templates ou serialização diretas de dados (@ResponseBody).
+
+Agora, se a aplicação é toda API Restful, sem templates HTML, utilize @RestController.
+
+- ### @RestController 
+Elimina a necessidade de ficar reescrevendo e anotando os métodos com @ResponseBody. Já que todos os dados serão serializados em JSON/XML e jogados na response.
+  
+**O RestController é inserido em classes que possuem ResourceLayer. Se temos uma classe Usuario, por exemplo, teremos uma UserResource onde ele será inserido, conforme abaixo.**
+```java
+@RestController
+@RequestMapping(value = "/users")
+public class UserResource {}
+```
+
+- ### @RequestMapping 
+Geralmente usamos nas classes Controllers, pois dessa forma, todos os métodos herdam o endereço do controller, evitando repetições.
+
+### Exemplos:
+#### Estrutura com repetição:
+```java
+@RequestMapping
+public class HelloController {
+
+    @GetMapping("/hello")
+    public String olaMundo() {
+        return "Hello World!";
+    }
+    
+    @GetMapping("/hello/bye")
+    public String olaMundo() {
+        return "Bye World!";
+    }
+    
+}
+```
+
+#### Estrutura sem repetição:
+```java
+@RequestMapping("/hello")
+public class HelloController {
+
+    @GetMapping
+    public String olaMundo() {
+        return "Hello World!";
+    }
+    
+    @GetMapping("/bye")
+    public String olaMundo() {
+        return "Bye World!";
+    }
+}
+```
+
+- ## @ManyToOne e @OneToMany 
+Utilizado para fazer relacionamento entre classes. Exemplo: Temos uma classe de Order e Usuários. Naturalmente, teremos várias ordens para um usuário. E um usuário para várias ordens.
+  - @ManyToOne - Como são várias ordens para um usuário, usamos a anotação abaixo na linha onde o usuário foi importado.
+    ```java
+        @ManyToOne
+        @JoinColumn(name = "client_id")
+        private User client;
+    ```
+  - @OneToMany - Um usuário pra várias ordens. O mappedBy diz: com qual nome a classe User foi importada para a outra.
+  ```java
+    @OneToMany(mappedBy = "client")
+    private List<Order> orders = new ArrayList<>();
+```
+
+</details>
 
 ## Conteúdo
 - Criar projeto Spring Boot Java
@@ -28,10 +222,6 @@
 
 ## User entity and resource
 
-### Spring Annotations
-
-- @RestController - Indica que o dado que será retornada por cada método, está sendo escrita diretamente no body ao invés de renderizar um template.
-  O RestController é inserido em classes que possuem ResourceLayer. Se temos uma classe <b>Usuario</b> por exemplo, teremos uma UserResource, conforme abaixo.
 
 ```java
 @RestController
@@ -214,24 +404,6 @@ Tudo dentro do método run será executado quando a operação for iniciada (no 
 </details>
 
 ## Service layer, component registration
-### Order, Instant, ISO 8601
-
-### Checklist:
-- Basic new entity checklist:
-  - Entity
-    - "To many" association, lazy loading, JsonIgnore
-- Repository
-- Seed
-- Service
-- Resource
-# IMPORTANTE
-A camada de Resources é um <b>controlador</b>. Deve somente intermediar as operações de aplicação e regras de negócio.
-
-Portanto, o Resources (controlador/UserResource) irá <b>depender do Service (service/UserService).</b> 
-
-E o Service depende do Repository/UserRepository - <b>a interface</b>.
-
-### Resumo: @RestControllers (UserResource) tem dependencia de @Services (UserService) e por sua vez, Services dependem de @Repository.
 
 ## MAIS SOBRE
 
@@ -297,5 +469,36 @@ Para o Spring aceitar esse id e considerar ele como parâmetro, a gente coloca u
     @GetMapping(value = "/{id}")
     public ResponseEntity<User> findById(@PathVariable Long id) {}
 ```
-
 O @PathVariable ele serve para usarmos como parâmetro o que está dentro das chaves {}.
+
+## Order, Instant, ISO 8601
+**Basic new entity checklist:** 
+
+### Checklist:
+- Basic new entity checklist:
+    - Entity
+        - "To many" association, lazy loading, JsonIgnore
+- Repository
+- Seed
+- Service
+- Resource
+
+Como fazer o relacionamento entre Order e User? 
+
+Bom, a nossa situação é: muitas orders para um só Usuário. E um Usuário para muitas ordens.
+
+## Resolvendo muitos para um:
+Na importação do **User** dentro de **Orders** colocamos a Anottation: **@ManyToOne** e **@JoinColumn**.
+```java
+@ManyToOne
+@JoinColumn(name = "client_id")
+private User client;
+```
+## Resolvendo um para muitos:
+
+Na importação do **Order** dentro de **User** colocamos a Anottation: **@OneToMany** e dentro passos o mappedBy.
+O mappedBy basicamente, diz como o User foi nomeado dentro da outra classe.
+```java
+    @OneToMany(mappedBy = "client")
+    private List<Order> orders = new ArrayList<>();
+```
