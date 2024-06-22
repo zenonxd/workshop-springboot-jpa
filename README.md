@@ -59,6 +59,7 @@ public class UserResource {
 
 <details>
   <summary style="font-weight: bold; font-size: 18px">Dependencies:</summary>
+
 ```xml
   <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -122,6 +123,91 @@ public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+```
+</details>
+
+## JPA repository, dependency injection, database seeding
+
+### Checklist:
+- UserRepository extends JPARepository<User, Long>
+- Configuration class for "test" profile
+- @Autowired UserRepository
+- Instantiate objects in memory
+- Persist objects
+
+<details>
+    <summary style="font-weight: bold; font-size: 18px">UserRepository</summary>
+
+UserRepository será responsável por fazer operações com a entidade User. Para criamos, faremos o UserRepository extender o JPARepository, passando o tipo da Entidade que vamos acessar e o tipo da chave.
+1. Criamos um package chamado repositories dentro de course e criamos o UserRepository (que será uma interface);
+2. Dentro da interface criada, extendemos passando o JpaRepository e parâmetros;
+```java
+public interface UserRepository extends JpaRepository <User, Long > {
+}
+```
+</details>
+
+<details>
+    <summary style="font-weight: bold; font-size: 18px">Configuration class for "test" profile</summary>
+
+Essa classe de configuração ela não é nem controller, service ou repository. Ela é uma classe auxiliar que vai fazer umas configurações na aplicação.
+1. Criamos um package chamado config e criamos uma entidade chamada TestConfig.
+2. Para o Spring identificar que é uma classe de configuração, passaremos uma anottation @Configuration.
+    Além disso, para caracterizarmos essa classe como perfil de teste, passaremos uma anottation @Profile.
+```java
+@Configuration
+@Profile("test")
+public class TestConfig {
+}
+```
+</details>
+
+<details>
+    <summary style="font-weight: bold; font-size: 18px">@Autowired UserRepository</summary>
+
+Essa classe TestConfig vai servir para database seeding. Ou seja, popular o banco de dados. Sabemos que para acessar/salvar coisas no banco de dados utilizamos o Repository. <br>
+
+Portanto, teremos o nosso primeiro caso de injeção de dependência. <br>
+
+Para fazermos o Spring entender que o objeto dependerá de outro, importar o UserRepository:
+```java
+    @Autowired
+    private UserRepository userRepository;
+```
+A anotação @AutoWired irá associar uma instância de UserRepository dentro de TestConfig através do Spring.
+</details>
+
+<details>
+    <summary style="font-weight: bold; font-size: 18px">Instantiate objects in memory</summary>
+
+O TestConfig irá implementar a interface CommandLineRunner. 
+```java
+public class TestConfig implements CommandLineRunner {,
+    @Override
+    public void run(String... args) throws Exception {
+        User u1 = new User(null, "Maria Brown", "maria@gmail.com", "988888888", "123456");
+        User u2 = new User(null, "Alex Green", "alex@gmail.com", "977777777", "123456");
+    }
+}
+```
+</details>
+
+<details>
+    <summary style="font-weight: bold; font-size: 18px">Persist Objects (Saving)</summary>
+
+Tudo dentro do método run será executado quando a operação for iniciada (no programa principal -CourseApplication-).
+1. Instanciamos os objetos desejados;
+2. E depois chamamos userRepository.saveAll(e aqui dentro, passamos um Arrays inserindo os objetos acima).
+
+```java
+    @Override
+    public void run(String... args) throws Exception {
+        User u1 = new User(null, "Maria Brown", "maria@gmail.com", "988888888", "123456");
+        User u2 = new User(null, "Alex Green", "alex@gmail.com", "977777777", "123456");
+
+        userRepository.saveAll(Arrays.asList(u1, u2));
+    }
+}
 ```
 
 </details>
