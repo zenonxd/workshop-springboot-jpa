@@ -8,7 +8,10 @@
 - [H2 database, test profile, JPA](#H2-database-test-profile-JPA)
 - [JPA repository, dependency injection, database seeding](#JPA-repository-dependency-injection-database-seeding)
 - [Service layer, component registration](#Service-layer-component-registration)
+<<<<<<< HEAD
 - [Order, Instant, ISO 8601](#order-instant-iso-8601)
+=======
+>>>>>>> 48f241c9a18fbfe4679f5b10d915b20a407d845e
 
 ## Service Layer
 ![img_2.png](img_2.png)
@@ -471,6 +474,7 @@ Para o Spring aceitar esse id e considerar ele como parâmetro, a gente coloca u
 ```
 O @PathVariable ele serve para usarmos como parâmetro o que está dentro das chaves {}.
 
+<<<<<<< HEAD
 ## Order, Instant, ISO 8601
 **Basic new entity checklist:** 
 
@@ -502,3 +506,6 @@ O mappedBy basicamente, diz como o User foi nomeado dentro da outra classe.
     @OneToMany(mappedBy = "client")
     private List<Order> orders = new ArrayList<>();
 ```
+=======
+O @PathVariable ele serve para usarmos como parâmetro o que está dentro das chaves {}.
+>>>>>>> 48f241c9a18fbfe4679f5b10d915b20a407d845e
