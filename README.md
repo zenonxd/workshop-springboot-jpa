@@ -49,7 +49,7 @@ public class UserResource {
 - @GetMapping - Feito para requisições GET, conforme utilizado no método acima.
 
 
-## H2 database, test profile, JPA
+## H2 database test profile JPA
 
 ### Checklist:
 - JPA & H2 dependencies
