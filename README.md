@@ -2,12 +2,12 @@
 
 
 ## Sumário
-- [Domain Model](##Domain-Model)
-- [Domain Instance](##Domain-Instance)
-- [User entity and resource](##User-entity-and-resource)
-- [H2 database, test profile, JPA](##H2-database-test-profile-JPA)
-- [JPA repository, dependency injection, database seeding](##JPA-repository,-dependency-injection,-database-seeding)
-- [## Service layer, component registration](##Service-layer,-component-registration)
+- [Domain Model](#Domain-Model)
+- [Domain Instance](#Domain-Instance)
+- [User entity and resource](#User-entity-and-resource)
+- [H2 database, test profile, JPA](#H2-database-test-profile-JPA)
+- [JPA repository, dependency injection, database seeding](#JPA-repository,-dependency-injection,-database-seeding)
+- [Service layer, component registration](#Service-layer,-component-registration)
 
 
 ## Conteúdo
