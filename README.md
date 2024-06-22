@@ -2,10 +2,12 @@
 
 
 ## Sumário
-- [Domain Model](#Domain-Model)
-- [Domain Instance](#Domain-Instance)
-- [User entity and resource](#User-entity-and-resource)
-- [H2 database, test profile, JPA](#H2-database-test-profile-JPA)
+- [Domain Model](##Domain-Model)
+- [Domain Instance](##Domain-Instance)
+- [User entity and resource](##User-entity-and-resource)
+- [H2 database, test profile, JPA](##H2-database-test-profile-JPA)
+- [JPA repository, dependency injection, database seeding](##JPA-repository,-dependency-injection,-database-seeding)
+- [## Service layer, component registration](##Service-layer,-component-registration)
 
 
 ## Conteúdo
@@ -49,7 +51,7 @@ public class UserResource {
 - @GetMapping - Feito para requisições GET, conforme utilizado no método acima.
 
 
-## H2 database test profile JPA
+## H2 database, test profile, JPA
 
 ### Checklist:
 - JPA & H2 dependencies
@@ -209,5 +211,91 @@ Tudo dentro do método run será executado quando a operação for iniciada (no 
     }
 }
 ```
-
 </details>
+
+## Service layer, component registration
+### Order, Instant, ISO 8601
+
+### Checklist:
+- Basic new entity checklist:
+  - Entity
+    - "To many" association, lazy loading, JsonIgnore
+- Repository
+- Seed
+- Service
+- Resource
+# IMPORTANTE
+A camada de Resources é um <b>controlador</b>. Deve somente intermediar as operações de aplicação e regras de negócio.
+
+Portanto, o Resources (controlador/UserResource) irá <b>depender do Service (service/UserService).</b> 
+
+E o Service depende do Repository/UserRepository - <b>a interface</b>.
+
+### Resumo: @RestControllers (UserResource) tem dependencia de @Services (UserService) e por sua vez, Services dependem de @Repository.
+
+## MAIS SOBRE
+
+Sabemos que o UserService importado para dentro do UserResource com @AutoWired foi injetada automaticamente pelo Spring.
+
+Mas para a variável service (advinda do UserService) funcionar dentro da classe (UserResource), a classe UserService deve ser registrada como um componente do Spring.
+
+Para fazer isso usamos uma Annotation:
+```java
+@Component
+public class UserService {}
+
+    E assim, essa classe poderá ser injetada automaticamente com o @AutoWired na outra classe:
+
+public class UserResource {
+    @Autowired
+    private UserService service;
+```
+
+### Além do @Component, temos outras Annotations com uma melhor semântica, a saber:
+
+@Repository - Registra um repository.
+
+@Service - Registra um serviço na camada de serviço. 
+
+Como a nossa classe é uma classe de serviço, daremos preferência para essa annotation.
+```java
+@Service
+public class UserService {
+```
+
+### Implementando findById
+
+#### Dentro do Service: 
+
+Faz a implementação do método.
+
+Esse método vai retornar um User.
+
+Para recuperarmos esse User por Id, usaremos novamente o repository.findById(id) e alocaremos esse Id em um Optional.
+
+```java
+    public User findById(Long id) {
+        Optional<User> obj = repository.findById(id);
+        return obj.get();
+    }
+```
+o obj.get retorna o objeto do tipo que especificamos, neste caso, User.
+
+#### Dentro do UserResource:
+
+Criamos a função, mas no Mapping passamos um value:
+```java
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<User> findById() {}
+```
+Isso indica que a nossa requisição vai aceitar um id dentro da URL.
+
+O nosso parâmetro dentro da função vai ser exatamente o que está dentro do value.
+
+Para o Spring aceitar esse id e considerar ele como parâmetro, a gente coloca uma Anottation: @PathVariable
+```java
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<User> findById(@PathVariable Long id) {}
+```
+
+O @PathVariable ele serve para usarmos como parâmetro o que está dentro das chaves {}.
