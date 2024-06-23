@@ -573,4 +573,86 @@ O mappedBy basicamente, diz como o User foi nomeado dentro da outra classe.
     private List<Order> orders = new ArrayList<>();
 ```
 O @PathVariable ele serve para usarmos como parâmetro o que está dentro das chaves {}.
+<hr>
+
+## OrderStatus enum 
+
+Quando nós criamos as variáveis Enums, elas ficam em sequência: 0, 1, 2, 3...
+
+Para que eventualmente alguem não chegue no código e adicione um novo Enum no meio dos outros, mudando a ordem,
+precisamos criar uma variavel do tipo int, um construtor e um método get.
+
+```java
+public enum OrderStatus {
+    WAITING_PAYMENT(1),
+    PAID(2),
+    SHIPPED(3),
+    DELIVERED(4),
+    CANCELED(5);
+
+    private int code;
+
+    private OrderStatus(int code) {
+        this.code = code;
+    }
+
+    public int getCode() {
+        return code;
+    }
+}
+```
+
+Criaremos também um método estático para converter um valor numérico para tipo Enum.
+```java    
+public static OrderStatus valueOf(int code) {
+        for (OrderStatus value : OrderStatus.values()) {
+            if (value.getCode() == code) {
+                return value;
+            }
+        }
+        throw new IllegalArgumentException("Invalid OrderStatus code");
+    }
+}
+
+```
+Um simples for loop testando se o valor da classe Enum (value.getCode() é igual ao code passado como parâmetro).
+
+Na classe Order, nós vamos fazer uma pequena alteração.
+Ao invés da variável ser do tipo OrderStatus, ela será do tipo integer.
+```java
+antes
+private OrderStatus orderStatus;
+
+depois
+private Integer orderStatus;
+```
+
+O que muda? 
+O construtor retornará um setOrderStatus.
+```java
+public Order(Long id, Instant moment, OrderStatus orderStatus, User client) {
+    this.id = id;
+    this.moment = moment;
+    setOrderStatus(orderStatus);
+    this.client = client;
+}
+```
+
+Os métodos get e set, continuarão a retornar OrderStatus, mas ficarão assim:
+```java
+public OrderStatus getOrderStatus() {
+    return OrderStatus.valueOf(orderStatus);
+}
+    Como agora na classe lá em cima está como Integer, nós passamos o orderStatus (agora intenger),
+    como parâmetro no método criando na classe OrderStatus :)
+
+
+public void setOrderStatus(OrderStatus orderStatus) {
+    if (orderStatus!= null) {
+        this.orderStatus = orderStatus.getCode();
+    }
+}
+    Já no método set, nós simplesmente pegamos na classe OrderStatus o getCode().
+```
+
 
