@@ -1,6 +1,5 @@
 # Project: Web Services com Spring Boot e JPA / Hibernate 
 
-
 ## Sumário
 - [Domain Model](#Domain-Model)
 - [Domain Instance](#Domain-Instance)
@@ -16,11 +15,9 @@
 
 A camada de **Resources** é um **controlador**. Deve somente **intermediar** as operações de aplicação e regras de negócio.
 
-
 Portanto, o Resources (controlador/UserResource) irá **depender do Service (service/UserService).**
 
 E o Service depende do Repository/UserRepository - <b>a interface</b>.
-
 
 Ou seja: @RestControllers (UserResource) tem dependencia de @Services (UserService) e por sua vez, Services dependem de @Repository.
 
@@ -29,7 +26,6 @@ Ou seja: @RestControllers (UserResource) tem dependencia de @Services (UserServi
 Sabemos que o UserService importado para dentro do UserResource com @AutoWired foi injetada automaticamente pelo Spring.
 
 Mas para a variável service (advinda do UserService) funcionar dentro da classe (UserResource), a classe UserService deve ser registrada como um componente do Spring.
-
 
 ```java
 @Component
@@ -41,9 +37,68 @@ public class UserResource {
     @Autowired
     private UserService service;
 ```
+<hr>
 
+<details>
+    <summary style="font-size: 25px">
+        Diferença entre Service, Resource e Repository
+    </summary>
 
+#### - @Services
+Importa para si o Repository.
 
+O service é responsável pela lógica da aplicação.
+Ele encapsula as operações que são específicas da aplicação, como validações, cálculos complexos, interações entre entidades de domínio, e outras regras de negócio.
+
+É comum que os Services sejam injetados em outros componentes, como Controllers (no caso do Spring MVC) ou outros Services, para que a lógica de negócio seja executada de forma organizada e isolada. Exemplo:
+```java
+@Service
+public class ProductService {
+    @Autowired
+    private ProductRepository productRepository;
+
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+    // Métodos para salvar, atualizar, deletar produtos, etc.
+}
+```
+
+#### - @Resource
+Importa para si o UserService.
+
+Resource representa um ponto de extremidade (endpoint) na sua aplicação RESTful. Ou seja, é um controlador que lida com requisições HTTP e retorna respostas, geralmente em JSON ou XML.
+
+Um resource pode ser um controlador Spring MVC anotado com @RestController, que combina a funcionalidade de @Controller e @ResponseBody. Exemplo:
+```java
+@RestController
+@RequestMapping("/api/products")
+public class ProductResource {
+    @Autowired
+    private ProductService productService;
+
+    @GetMapping
+    public List<Product> getAllProducts() {
+        return productService.getAllProducts();
+    }
+
+    // Outros métodos para lidar com POST, PUT, DELETE, etc.
+}
+```
+#### - @Repository
+O repository é uma camada de abstração que lida com o acesso a dados. Ele encapsula a lógica de acesso a banco de dados ou outra fonte. Em geral, Repository é usado para recuperar dados,
+salvar, atualizar e deletar registros no banco de dados.
+
+Repositories são frequentemente implementados usando o padrão de deisgn Repository e não anotados com @Repository. Exemplo:
+```java
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    // Métodos para acessar dados relacionados a produtos
+}
+```
+</details>
+<hr>
 
 <details>
     <summary style="font-weight: bold; font-size: 25px">Anotações Spring @</summary>
@@ -203,9 +258,22 @@ Utilizado para fazer relacionamento entre classes. Exemplo: Temos uma classe de 
     private List<Order> orders = new ArrayList<>();
 ```
 
-</details>
+- ## @JsonIgnore
 
-## Conteúdo
+
+Se temos uma associação de mão dupla (muitos para um). O Jackson (biblioteca de serialização) fica chamando.
+
+O pedido chama usuário, usuário chama pedido... e assim fica um looping.
+
+Portanto, tem que colocar o JsonIgnore em algum dos dois lados.
+
+
+
+</details>
+<hr>
+
+
+## Conteúdo - Início das Aulas
 - Criar projeto Spring Boot Java
 - Implementar modelo de domínio
 - Estruturar camadas lógicas: resource, service, repository
@@ -221,9 +289,7 @@ Utilizado para fazer relacionamento entre classes. Exemplo: Temos uma classe de 
 ![img_1.png](img_1.png)
 
 
-## User entity and resource
-
-
+## UserResource
 ```java
 @RestController
 @RequestMapping(value = "/users")
@@ -240,7 +306,7 @@ public class UserResource {
 
 
 - @GetMapping - Feito para requisições GET, conforme utilizado no método acima.
-
+<hr>
 
 ## H2 database, test profile, JPA
 
@@ -318,6 +384,7 @@ public class User implements Serializable {
     private Long id;
 ```
 </details>
+<hr>
 
 ## JPA repository, dependency injection, database seeding
 
@@ -403,10 +470,10 @@ Tudo dentro do método run será executado quando a operação for iniciada (no 
 }
 ```
 </details>
+<hr>
 
-## Service layer, component registration
+## Service layer, Resource e component registration
 
-## MAIS SOBRE
 
 Sabemos que o UserService importado para dentro do UserResource com @AutoWired foi injetada automaticamente pelo Spring.
 
@@ -471,8 +538,9 @@ Para o Spring aceitar esse id e considerar ele como parâmetro, a gente coloca u
     public ResponseEntity<User> findById(@PathVariable Long id) {}
 ```
 O @PathVariable ele serve para usarmos como parâmetro o que está dentro das chaves {}.
+<hr>
 
-<<<<<<< HEAD
+
 ## Order, Instant, ISO 8601
 **Basic new entity checklist:** 
 
@@ -505,3 +573,4 @@ O mappedBy basicamente, diz como o User foi nomeado dentro da outra classe.
     private List<Order> orders = new ArrayList<>();
 ```
 O @PathVariable ele serve para usarmos como parâmetro o que está dentro das chaves {}.
+
