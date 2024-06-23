@@ -8,6 +8,8 @@
 - [JPA repository, dependency injection, database seeding](#JPA-repository-dependency-injection-database-seeding)
 - [Service layer, component registration](#Service-layer-component-registration)
 - [Order, Instant, ISO 8601](#order-instant-iso-8601)
+- [OrderStatus enum](#orderstatus-enum-)
+- [Entidade Category](#entidade-category)
 
 
 ## Service Layer
@@ -655,4 +657,7 @@ public void setOrderStatus(OrderStatus orderStatus) {
     Já no método set, nós simplesmente pegamos na classe OrderStatus o getCode().
 ```
 
+## Entidade Category
+Aqui foi só criar a classe na entidade, depois o resource e service reaproveitando o que já foi aprendido
+juntamente com as anotações :).
 
