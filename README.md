@@ -661,3 +661,5 @@ public void setOrderStatus(OrderStatus orderStatus) {
 Aqui foi só criar a classe na entidade, depois o resource e service reaproveitando o que já foi aprendido
 juntamente com as anotações :).
 
+## Entidade Product
+Usaremos Set nas Categories para garantir que nenhum produto tenha uma categoria mais de uma vez.
