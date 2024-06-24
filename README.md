@@ -642,6 +642,7 @@ public Order(Long id, Instant moment, OrderStatus orderStatus, User client) {
 
 Os métodos get e set, continuarão a retornar OrderStatus, mas ficarão assim:
 ```java
+private Integer orderStatus;
 public OrderStatus getOrderStatus() {
     return OrderStatus.valueOf(orderStatus);
 }
@@ -662,4 +663,63 @@ Aqui foi só criar a classe na entidade, depois o resource e service reaproveita
 juntamente com as anotações :).
 
 ## Entidade Product
-Usaremos Set nas Categories para garantir que nenhum produto tenha uma categoria mais de uma vez.
+Usaremos Set no link entre Categories e Products para garantir que nenhum produto tenha uma categoria mais de uma vez ou vice-versa.
+```java
+public class Product implements Serializable {
+    private Set<Category> categories = new HashSet<>();
+}
+
+public class Category implements Serializable {
+    private Set<Product> products = new HashSet<>();
+}
+```
+
+## Muitos para muitos com @JoinTable
+
+Bom, como **um produto** pode ter **várias categorias** e uma **categoria** pode ter **vários produtos**...
+
+Primeiramente nós vamos escolher uma das duas classes, neste caso, será **Product**.
+
+1. Passar a anotação @ManyToMany e @JoinTable.
+
+2. Na JoinTable, passaremos o nome da tabela e quais as chaves estrangeiras que vão associar a tabela de Produto com Categoria.
+
+3. Ao colocarmos ****name**, criamos a tabela de associação.**
+
+E precisamos falar também **qual será o nome da chave estrangeira, referente a tabela de Product**.
+
+Para fazermos isso, é só passar o joinColums = @JoinColumn(name = "nome da chave estrangeira") do Product.
+
+Nós sabemos que na tabela de associação ela vai ter chaves estrangeiras das duas tabelas, neste caso, Product e Category.
+
+Nós usaremos o **inverseJoinColumns** para definirmos a chave estrangeira da outra entidade (Category).
+
+```java
+    @ManyToMany
+    @JoinTable(name = "tb_product_category",
+        joinColumns = @JoinColumn(name = "product_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+private Set<Category> categories = new HashSet<>();
+```
+
+E agora precisamos ir à classe Category, e colocar uma referência para o mapeamento que acabamos de fazer!
+```java
+    @ManyToMany(mappedBy = "categories")
+    private Set<Product> products = new HashSet<>();
+```
+
+E para associarmos um produto a uma categoria? Primeiro, vamos a classe TestConfig.
+1. Acessaremos o product, pegando sua categorie e adicionando a categoria.
+   ```java
+           p1.getCategories().add(cat2)
+   ```
+
+### RESUMO
+Selecionamos a classe a ser utilizada.
+
+O JoinTable(name), cria a nova tabela.
+O JoinColumns cria uma coluna com o nome passado.
+O inverseJoinColumns é o nome da outra entidade não usada.
+
+Na outra classe, usamos mappedby colocando o nome da outra coleção "Set", que é categories.
